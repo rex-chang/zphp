@@ -128,6 +128,7 @@ class ZPHP
         $timeZone = Config::get('time_zone', 'Asia/Shanghai');
         \date_default_timezone_set($timeZone);
         $serverMode = Config::get('server_mode', 'Http');
+//        echo __NAMESPACE__;
         $service = Server\Factory::getInstance($serverMode);
         $service->run();
         if (Config::getField('project', 'debug_mode', 0)) {

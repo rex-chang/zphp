@@ -19,6 +19,7 @@ class Socket
             throw new \Exception("socket config empty");
         }
         $socket = SFactory::getInstance($config['adapter'], $config);
+//        echo $socket;
         $client = CFactory::getInstance($config['client_class']);
         $socket->setClient($client);
         $socket->run();

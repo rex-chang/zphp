@@ -19,6 +19,7 @@ class Factory
     		}
     	}
         $className = __NAMESPACE__ . "\\Adapter\\{$adapter}";
+//        echo $className;
         return CFactory::getInstance($className, $config);
     }
 }

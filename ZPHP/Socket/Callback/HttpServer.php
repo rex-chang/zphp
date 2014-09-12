@@ -52,12 +52,13 @@ abstract class HttpServer implements ICallback
         $serv = $params[0];
         $fd = $params[1];
         $parser = new HttpParser();
+//        var_dump('reciveData:', $_data, \ZPHP\Serialize\Adapter\Msgpack::unserialize($_data));
         $buffer = $this->cache->getBuff($fd);
         $nparsed = (int) $this->cache->getBuff($fd, 'nparsed');
         $buffer .= $_data;
         $nparsed = $parser->execute($buffer, $nparsed);
         if($parser->hasError()) {
-            $serv->close($fd, $params[2]);
+            @$serv->close($fd, $params[2]);
             $this->_clearBuff($fd);
         } elseif ($parser->isFinished()) {
             $this->_clearBuff($fd);

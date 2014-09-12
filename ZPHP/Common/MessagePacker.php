@@ -54,12 +54,14 @@ class MessagePacker
     }
 
     //写二进制数据
-    public function writeBinary($b, $len=null)
+    public function writeBinary($b, $len=null, $headFlag = true)
     {
-        if(null === $len) {
-            $len = strlen($b);
+        if($headFlag){
+            if (null === $len) {
+                $len = strlen($b);
+            }
+            $this->writeInt($len);
         }
-        $this->writeInt($len);
         $this->data .= $b;
         //$this->data .= pack('H*', $b);
     }
@@ -71,14 +73,14 @@ class MessagePacker
 
     public function writeInt($i)
     {
-        //$this->data .= pack("N1", $i);
-        $this->data .= pack("V1", $i);
+        $this->data .= pack("N1", $i);
+//        $this->data .= pack("V1", $i);
     }
 
     public function writeInt16($i)
     {
-        //$this->data .= pack("n1", $i);
-        $this->data .= pack("v1", $i);
+        $this->data .= pack("n1", $i);
+//        $this->data .= pack("v1", $i);
     }
 
     public function readByte()
@@ -90,8 +92,8 @@ class MessagePacker
 
     public function readInt()
     {
-        //$ret = unpack("N1ele", substr($this->data, $this->offset, 4));
-        $ret = unpack("V1ele", substr($this->data, $this->offset, 4));
+        $ret = unpack("N1ele", substr($this->data, $this->offset, 4));
+//        $ret = unpack("V1ele", substr($this->data, $this->offset, 4));
         $this->offset += 4;
 
         return $ret['ele'];
@@ -99,8 +101,8 @@ class MessagePacker
 
     public function readInt16()
     {
-        //$ret = unpack("n1ele", substr($this->data, $this->offset, 2));
-        $ret = unpack("v1ele", substr($this->data, $this->offset, 2));
+        $ret = unpack("n1ele", substr($this->data, $this->offset, 2));
+//        $ret = unpack("v1ele", substr($this->data, $this->offset, 2));
         $this->offset += 2;
 
         return $ret['ele'];

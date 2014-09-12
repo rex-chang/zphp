@@ -25,7 +25,7 @@ class Json extends Base
             }
             
         } else {
-        	return \json_encode($this->model);
+        	echo \json_encode($this->model);
         }
 
         
