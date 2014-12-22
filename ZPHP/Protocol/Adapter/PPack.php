@@ -8,6 +8,7 @@
 
 namespace ZPHP\Protocol\Adapter;
 
+use ZPHP\Common\Utils;
 use ZPHP\Core\Config;
 use ZPHP\Common\MessagePacker;
 use ZPHP\Protocol\IProtocol;
@@ -17,14 +18,16 @@ use ZPHP\Cache\Factory as ZCache,
     ZPHP\Core\Config as ZConfig;
 
 
-class PPack implements IProtocol {
+class PPack implements IProtocol
+{
 
-    private $_ctrl = 'main\\main';
+    private $_ctrl = 'main';
     private $_method = 'main';
     private $_params = array();
     private $_buffer = array();
     private $fd;
     private $_data;
+
 
     /**
      * client包格式： writeString(json_encode(array("a"='main/main',"m"=>'main', 'k1'=>'v1')));
@@ -32,13 +35,15 @@ class PPack implements IProtocol {
      * @param $_data
      * @return bool
      */
-    public function parse($_data) {
+    public function parse($_data)
+    {
+//        echo 321321321;
         $this->_ctrl = Config::getField('project', 'default_ctrl_name', 'main\\main');
         $this->_method = Config::getField('project', 'default_method_name', 'main');
         if (empty($this->_cache)) {
             $config = ZConfig::getField('cache', 'locale', array());
-           
-            $this->_cache = ZCache::getInstance('Redis',$config);
+
+            $this->_cache = ZCache::getInstance('Redis', $config);
         }
         if (!empty($cacheData)) {
             $_data = $cacheData . $_data;
@@ -61,7 +66,7 @@ class PPack implements IProtocol {
         $this->_cmd = $packData->readInt16();
         $this->_sid = $packData->readInt();
         $this->_rid = $packData->readInt();
-        
+
         $params = $packData->getBuffer();
         $this->_params = ZSerialize::unserialize('Msgpack', $params);
 //        $testObj = new \stdClass();
@@ -71,19 +76,21 @@ class PPack implements IProtocol {
             'time' => time(),
             'obj' => $testObj
         );
-        var_dump('params:', $this->_params);
-        $apn = Config::getField('project', 'ctrl_name', 'a');
-        $mpn = Config::getField('project', 'method_name', 'm');
-        if (isset($params[$apn])) {
-            $this->_ctrl = \str_replace('/', '\\', $params[$apn]);
-        }
-        if (isset($params[$mpn])) {
-            $this->_method = $params[$mpn];
-        }
+//        var_dump('params:', $this->_params);
+        $this->_ctrl = Config::getField('cmdList', $this->_cmd);
+        if (!$this->_ctrl)
+            return false;
+        $this->_ctrl .= 'Ctrl';
+        $this->_method = Config::getField('methodList',
+            $this->_cmd)[$this->_params['type']];
+
+        if (!$this->_method)
+            return false;
         return $this->_params;
     }
 
-    public function getData() {
+    public function getData()
+    {
         $mpackData = ZSerialize::serialize('Msgpack', $this->_data);
 //        SMsgPack::serialize($this->_data);
         $mpackr = new MessagePacker();
@@ -98,27 +105,33 @@ class PPack implements IProtocol {
         return $data;
     }
 
-    public function setFd($fd) {
+    public function setFd($fd)
+    {
         $this->fd = $fd;
     }
 
-    public function getFdBuffer($fd) {
+    public function getFdBuffer($fd)
+    {
         return !empty($this->_buffer[$fd]) ? $this->_buffer[$fd] : false;
     }
 
-    public function getCtrl() {
+    public function getCtrl()
+    {
         return $this->_ctrl;
     }
 
-    public function getMethod() {
+    public function getMethod()
+    {
         return $this->_method;
     }
 
-    public function getParams() {
+    public function getParams()
+    {
         return $this->_params;
     }
 
-    public function display($model) {
+    public function display($model)
+    {
 //        $data = array();
 //        if (is_array($model)) {
 //            $data = $model;
@@ -127,10 +140,12 @@ class PPack implements IProtocol {
 //        }
 //        $data['fd'] = $this->fd;
 //        $this->_data = $data;
-        return $this->getData();
+//        return $this->getData();
+        return $model;
     }
 
-    public function sendMaster(array $_params = null) {
+    public function sendMaster(array $_params = null)
+    {
         if (!empty($_params)) {
             $this->_data = $this->_data + $_params;
         }
@@ -138,6 +153,27 @@ class PPack implements IProtocol {
         $port = Config::getField('socket', 'port');
         $client = new ZSClient($host, $port);
         $client->send($this->getData());
+    }
+
+    public function packData($cmd, array $data = array(), $send = 8, $recv = 9)
+    {
+//        if ($cmd != 1)
+//            Utils::debug('sendData:', 'cmd:', $cmd, $data);
+
+        $mpackData = ZSerialize::serialize('Msgpack', $data);
+        $mpackr = new MessagePacker();
+        $packLen = strlen($mpackData) + 10;
+        $mpackr->writeInt16($packLen);
+        $mpackr->writeInt16($cmd);
+        $mpackr->writeInt($send);
+        $mpackr->writeInt($recv);
+        $mpackr->writeBinary($mpackData, 0, 0);
+        return $mpackr->getData();
+    }
+
+    public function getFd()
+    {
+        return $this->fd;
     }
 
 }

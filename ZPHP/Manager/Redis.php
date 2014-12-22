@@ -22,6 +22,12 @@ class Redis
             } else {
                 $redis->connect($config['host'], $config['port'], $config['timeout']);
             }
+            if (isset($config['pass'])) {
+                $redis->auth($config['pass']);
+            }
+            if (isset($config['db'])) {
+                $redis->select($config['db']);
+            }
             $redis->setOption(\Redis::OPT_SERIALIZER, \Redis::SERIALIZER_NONE);
             self::$instances[$name] = $redis;
             self::$configs[$name] = $config;

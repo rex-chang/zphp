@@ -23,6 +23,11 @@ class Redis implements IStorage
             $this->pconnect = $config['pconnect'];
         }
     }
+    function  __call($name, $params){
+        $params[0] = $this->uKey($params[0]);
+        if(method_exists($this->redis, $name));
+        return call_user_func_array(array($this->redis, $name), $params);
+    }
 
     public function setSlave($config)
     {
@@ -146,6 +151,16 @@ class Redis implements IStorage
         foreach ($cmds as $userId => $key) {
             $uKey = $this->uKey($userId);
             $this->redis->hGet($uKey, $key);
+        }
+
+        return $this->redis->exec();
+    }
+
+    public function getMultiAll($uids){
+        $this->redis->multi(\Redis::PIPELINE);
+        foreach ($uids as $userId) {
+            $uKey = $this->uKey($userId);
+            $this->redis->hGetAll($uKey);
         }
 
         return $this->redis->exec();

@@ -6,6 +6,7 @@
 
 
 namespace ZPHP\Cache\Adapter;
+
 use ZPHP\Cache\ICache,
     ZPHP\Manager;
 
@@ -18,6 +19,14 @@ class Redis implements ICache
         if (empty($this->redis)) {
             $this->redis = Manager\Redis::getInstance($config);
         }
+    }
+
+    function  __call($name, $params)
+    {
+//        $params[0] = $this->uKey($params[0]);
+//        var_dump('params:',$params);
+        if (method_exists($this->redis, $name)) ;
+        return call_user_func_array(array($this->redis, $name), $params);
     }
 
     public function enable()
@@ -77,5 +86,51 @@ class Redis implements ICache
     public function clear()
     {
         return $this->redis->flushDB();
+    }
+
+    //自加方法
+    public function sAdd($key, $value)
+    {
+        return $this->redis->sAdd($key, $value);
+    }
+
+//    public function getKeys($key)
+//    {
+//        return $this->redis->getKeys($key);
+//    }
+
+    public function sRemove($key, $value)
+    {
+        return $this->redis->sRemove($key, $value);
+    }
+
+    public function sRandMember($key)
+    {
+        return $this->redis->sRandMember($key);
+    }
+
+    public function hSetNx($key, $ext, $value)
+    {
+        return $this->redis->hSetNx($key, $ext, $value);
+    }
+
+    public function hGetAll($key)
+    {
+        return $this->redis->hGetAll($key);
+    }
+
+    public function  hMset($key, array $values)
+    {
+        return $this->redis->hMset($key, $values);
+    }
+
+    public function hIncrBy($key, $ext, $offset = 1)
+    {
+        return $this->redis->hIncrBy($key, $ext, $offset);
+    }
+
+    public function hDel($key, $ext)
+    {
+        return $this->redis->hDel($key, $ext);
     }
 }
